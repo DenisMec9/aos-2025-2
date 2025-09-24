@@ -23,3 +23,4 @@ if (process.env.NODE_ENV !== 'vercel') {
 
 // export para Vercel
 export default app;
+
