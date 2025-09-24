@@ -1,34 +1,25 @@
-import Sequelize from "sequelize";
+import "dotenv/config";             // <-- ADICIONE ESTA LINHA
+import { Sequelize } from "sequelize";
+import getUser from "./user.js";
+import getMessage from "./message.js";
 
-import getUserModel from "./user";
-import getMessageModel from "./message";
+const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!url) {
+  console.error("DATABASE_URL NÃO DEFINIDA (verifique ex01-express/.env)");
+  process.exit(1);
+}
 
-//POSTGRES_URL
-const sequelize = new Sequelize(process.env.POSTGRES_URL, {
+export const sequelize = new Sequelize(url, {
   dialect: "postgres",
-  protocol: "postgres",
-  // logging: false, // Disable SQL query logging
-  dialectOptions: {
-    // Necessary for SSL on NeonDB, Render.com and other providers
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
-  dialectModule: require("pg"),
+  logging: false,
+  dialectOptions: { ssl: { require: true } },
 });
 
 const models = {
-  User: getUserModel(sequelize, Sequelize),
-  Message: getMessageModel(sequelize, Sequelize),
+  User: getUser(sequelize, Sequelize),
+  Message: getMessage(sequelize, Sequelize),
 };
 
-Object.keys(models).forEach((key) => {
-  if ("associate" in models[key]) {
-    models[key].associate(models);
-  }
-});
-
-export { sequelize };
+Object.values(models).forEach((m) => m.associate && m.associate(models));
 
 export default models;
