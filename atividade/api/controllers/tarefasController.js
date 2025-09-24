@@ -1,57 +1,67 @@
-import models from '../models/index.js';
+// api/controllers/tarefasController.js
+import { v4 as uuidv4 } from 'uuid';
+import { Tarefa } from '../models/Tarefa.js';
 
-//POST
-export const criarTarefa = async (req, res) => {
-    try {
-        const novaTarefa = await models.Tarefa.create(req.body);
-        return res.status(201).json(novaTarefa);
-    } catch (error) {
-        return res.status(400).json({ error: error.message });
-    }
+// armazenamento em memória (simples)
+const db = {
+  tarefas: []
 };
 
-//GetAll
-export const listarTarefas = async (req, res) => {
-    const tarefas = await models.Tarefa.findAll();
-    return res.status(200).json(tarefas);
-};
-
-//GetById
-export const listarTarefaPorId = async (req, res) => {
-    const { objectId } = req.params;
-    const tarefa = await models.Tarefa.findByPk(objectId);
-
-    if (!tarefa) {
-        return res.status(404).json({ error: 'Tarefa não encontrada.' });
-    }
-    return res.status(200).json(tarefa);
-};
-
-//PUT
-export const atualizarTarefa = async (req, res) => {
-    const { objectId } = req.params;
-    const [updated] = await models.Tarefa.update(req.body, {
-        where: { objectId: objectId }
+export const criarTarefa = (req, res, next) => {
+  try {
+    Tarefa.validateCreate(req.body);
+    const objectId = uuidv4();
+    const tarefa = new Tarefa({
+      objectId,
+      descricao: req.body.descricao.trim(),
+      concluida: req.body.concluida ?? false
     });
-
-    if (!updated) {
-        return res.status(404).json({ error: 'Tarefa não encontrada.' });
-    }    
-
-    const tarefaAtualizada = await models.Tarefa.findByPk(objectId);
-    return res.status(200).json(tarefaAtualizada);
+    db.tarefas.push(tarefa);
+    return res.status(201).json(tarefa);
+  } catch (err) {
+    return next(err);
+  }
 };
 
-//DELETE
-export const deletarTarefa = async (req, res) => {
-    const { objectId } = req.params;
-    const deletada = await models.Tarefa.destroy({
-        where: { objectId: objectId }
-    });
-
-    if (!deletada) {
-        return res.status(404).json({ error: 'Tarefa não encontrada.' });
-    } 
-
-    return res.status(200).json({ message: 'Tarefa deletada com sucesso.' });
+export const listarTarefas = (_req, res) => {
+  return res.json(db.tarefas);
 };
+
+export const obterTarefa = (req, res) => {
+  const tarefa = db.tarefas.find(t => t.objectId === req.params.objectId);
+  if (!tarefa) {
+    return res.status(404).json({ error: 'Tarefa não encontrada.' });
+  }
+  return res.json(tarefa);
+};
+
+export const atualizarTarefa = (req, res, next) => {
+  try {
+    const idx = db.tarefas.findIndex(t => t.objectId === req.params.objectId);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Tarefa não encontrada.' });
+    }
+    Tarefa.validateUpdate(req.body);
+    const atual = db.tarefas[idx];
+    if (req.body.descricao !== undefined) atual.descricao = req.body.descricao.trim();
+    if (req.body.concluida !== undefined) atual.concluida = req.body.concluida;
+    atual.updatedAt = new Date().toISOString();
+    db.tarefas[idx] = atual;
+    return res.json(atual);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+export const removerTarefa = (req, res) => {
+  const idx = db.tarefas.findIndex(t => t.objectId === req.params.objectId);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Tarefa não encontrada.' });
+  }
+  db.tarefas.splice(idx, 1);
+  // 204: sucesso sem conteúdo
+  return res.status(204).send();
+};
+
+// exporta o "db" só para testes manuais se precisar
+export const __memDb = db;

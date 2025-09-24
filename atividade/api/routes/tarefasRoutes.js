@@ -1,27 +1,19 @@
-import { Router } from "express";
-import { criarTarefa,
-        listarTarefas,
-        listarTarefaPorId,
-        atualizarTarefa,
-        deletarTarefa 
-        } from "../controllers/tarefasController.js";
+// api/routes/tarefasRoutes.js
+import { Router } from 'express';
+import {
+  criarTarefa,
+  listarTarefas,
+  obterTarefa,
+  atualizarTarefa,
+  removerTarefa
+} from '../controllers/tarefasController.js';
 
-    
-    const router = Router();
+const router = Router();
 
-    //POST
-    router.post('/', criarTarefa);
+router.post('/', criarTarefa);
+router.get('/', listarTarefas);
+router.get('/:objectId', obterTarefa);
+router.put('/:objectId', atualizarTarefa);
+router.delete('/:objectId', removerTarefa);
 
-    //GET
-    router.get('/', listarTarefas);
-
-    //GET BY ID
-    router.get('/:objectId', listarTarefaPorId);
-
-    //PUT
-    router.put('/:objectId', atualizarTarefa);
-
-    //DELETE
-    router.delete('/:objectId', deletarTarefa);
-
-    export default router;
+export default router;

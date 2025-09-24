@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development node api/app.js",
+    "start": "cross-env NODE_ENV=production node api/app.js",
+    "vercel-build": "echo \"no build step\""
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "uuid": "^9.0.1",
+    "cross-env": "^7.0.3"
+  }
+}
