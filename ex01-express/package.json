@@ -4,6 +4,7 @@
   "private": true,
   "description": "Tutorial de Node.JS + Express + PostgreSQL",
   "main": "api/index.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon --exec babel-node api/index.js",
     "start": "nodemon --exec babel-node api/index.js"
