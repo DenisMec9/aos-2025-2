@@ -30,6 +30,9 @@ app.use((req, _res, next) => {
 });
 
 // 3) rotas
+app.get("/",(req, res)=>{
+  res.send("Servidor funcionando")
+})
 app.use("/user", userRouter);
 app.use("/message", messageRouter);
 
