@@ -2,8 +2,7 @@
 import "dotenv/config";
 import pg from "pg";
 import { Sequelize } from "sequelize";
-import getUser from "./user.js";
-import getMessage from "./message.js";
+import getTarefa from "./Tarefa.js"; // Alterado para Tarefa
 
 const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!url) {
@@ -21,8 +20,7 @@ export const sequelize = new Sequelize(url, {
 });
 
 const models = {
-  User: getUser(sequelize, Sequelize),
-  Message: getMessage(sequelize, Sequelize),
+  Tarefa: getTarefa(sequelize, Sequelize), // Alterado para Tarefa
 };
 
 Object.values(models).forEach((m) => m.associate && m.associate(models));
