@@ -5,6 +5,7 @@ import express from "express";
 import models, { sequelize } from "./models/index.js";
 import userRouter from "./routes/user.js";
 import messageRouter from "./routes/message.js";
+import tasks from "./routes/tarefasRoutes.js";
 
 const app = express();
 app.set("trust proxy", true);
@@ -29,6 +30,7 @@ app.get("/", (_req, res) => {
 
 app.use("/user", userRouter);
 app.use("/message", messageRouter);
+app.use("/tasks", tasks);
 
 let dbReadyPromise;
 async function ensureDb() {
