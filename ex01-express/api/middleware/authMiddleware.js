@@ -1,8 +1,8 @@
 // ex01-express/api/middleware/authMiddleware.js
 
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-module.exports = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -21,6 +21,7 @@ module.exports = (req, res, next) => {
     return res.status(401).json({ error: 'Token mal formatado.' });
   }
 
+  // Lembre-se de usar a mesma chave secreta do seu controller
   jwt.verify(token, 'seuSegredoJWT', (err, decoded) => {
     if (err) {
       return res.status(401).json({ error: 'Token inválido.' });
@@ -30,3 +31,5 @@ module.exports = (req, res, next) => {
     return next();
   });
 };
+
+export default authMiddleware; // Alterado de module.exports para export default

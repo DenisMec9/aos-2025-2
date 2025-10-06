@@ -1,14 +1,14 @@
-// denismec9/aos-2025-2/aos-2025-2-main/atividade/api/routes/tarefasRoutes.js
+// ex01-express/api/routes/tarefasRoutes.js
 
-const express = require('express');
-const router = express.Router();
-const tarefasController = require('../controllers/tarefasController');
+import { Router } from 'express';
+import * as tarefasController from '../../controllers/tarefasController.js';
 
-// ...
+const router = Router();
 
-// Rota para criar uma nova tarefa (POST /tarefas)
+router.get('/', tarefasController.getAllTarefas);
 router.post('/', tarefasController.createTarefa);
+router.get('/:id', tarefasController.getTarefaById);
+router.put('/:id', tarefasController.updateTarefa);
+router.delete('/:id', tarefasController.deleteTarefa);
 
-// ...
-
-module.exports = router;
+export default router;
