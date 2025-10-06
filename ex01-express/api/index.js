@@ -3,6 +3,12 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import models, { sequelize } from "./models/index.js";
+
+// Importações para Autenticação
+import authRoutes from "./routes/authRoutes.js"; // Importa as rotas de autenticação
+import authMiddleware from "./middleware/authMiddleware.js"; // Importa o middleware de autenticação
+
+// Suas rotas existentes
 import userRouter from "./routes/user.js";
 import messageRouter from "./routes/message.js";
 import tasks from "./routes/tarefasRoutes.js";
@@ -14,7 +20,7 @@ app.use(cors({ origin: "*", optionsSuccessStatus: 200 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, _res, next) => { 
+app.use((req, _res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
 });
@@ -28,9 +34,13 @@ app.get("/", (_req, res) => {
   res.send("Servidor funcionando");
 });
 
-app.use("/user", userRouter);
-app.use("/message", messageRouter);
-app.use("/tasks", tasks);
+// Rotas públicas (não exigem token)
+app.use("/auth", authRoutes);
+
+// Rotas protegidas (exigem token JWT)
+app.use("/user", authMiddleware, userRouter);
+app.use("/message", authMiddleware, messageRouter);
+app.use("/tasks", authMiddleware, tasks);
 
 let dbReadyPromise;
 async function ensureDb() {
