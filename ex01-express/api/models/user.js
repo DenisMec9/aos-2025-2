@@ -1,30 +1,56 @@
-// ex01-express/api/models/user.js
+// api/models/user.js
+import bcrypt from 'bcryptjs'; // <-- CORREÇÃO: Adicionar esta linha de importação
 
-const bcrypt = require('bcryptjs');
-
-module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+const user = (sequelize, DataTypes) => {
+  const User = sequelize.define('user', {
     username: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
-    password: {
+    password: { // Adicionado o campo de palavra-passe
       type: DataTypes.STRING,
       allowNull: false,
-    },
+      validate: {
+        notEmpty: true,
+      },
+    }
   });
 
-  // Hook para criptografar a senha antes de salvar o usuário
+  User.associate = (models) => {
+    User.hasMany(models.Message, { onDelete: 'CASCADE' });
+  };
+
+  User.findByLogin = async (login) => {
+    let user = await User.findOne({
+      where: { username: login },
+    });
+
+    if (!user) {
+      user = await User.findOne({
+        where: { email: login },
+      });
+    }
+
+    return user;
+  };
+
+  // Hook para encriptar a palavra-passe antes de criar o utilizador
   User.beforeCreate(async (user) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
   });
 
-  // Método para verificar a senha
+  // Método de instância para validar a palavra-passe
   User.prototype.isValidPassword = async function(password) {
     return await bcrypt.compare(password, this.password);
   };
 
+
   return User;
 };
+
+export default user;
