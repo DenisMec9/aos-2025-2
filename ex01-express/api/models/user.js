@@ -1,4 +1,3 @@
-// api/models/user.js
 import bcrypt from 'bcryptjs'; // <-- CORREÇÃO: Adicionar esta linha de importação
 
 const user = (sequelize, DataTypes) => {
@@ -24,16 +23,11 @@ const user = (sequelize, DataTypes) => {
     User.hasMany(models.Message, { onDelete: 'CASCADE' });
   };
 
+  // Esta função foi simplificada para corresponder aos campos do seu modelo
   User.findByLogin = async (login) => {
-    let user = await User.findOne({
+    const user = await User.findOne({
       where: { username: login },
     });
-
-    if (!user) {
-      user = await User.findOne({
-        where: { email: login },
-      });
-    }
 
     return user;
   };
@@ -54,3 +48,4 @@ const user = (sequelize, DataTypes) => {
 };
 
 export default user;
+
