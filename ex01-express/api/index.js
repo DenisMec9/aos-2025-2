@@ -44,7 +44,7 @@ app.use("/auth", authRoutes);
 // Rotas protegidas (exigem token JWT e também têm acesso ao req.context)
 app.use("/user", authMiddleware, userRouter);
 app.use("/message", authMiddleware, messageRouter);
-app.use("/tasks", authMiddleware, tasks);
+app.use("/tasks", tasks);
 
 // O resto do seu arquivo para inicialização do banco de dados...
 let dbReadyPromise;
