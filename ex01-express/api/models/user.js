@@ -10,7 +10,7 @@ const user = (sequelize, DataTypes) => {
         notEmpty: true,
       },
     },
-    // NOVO CAMPO DE E-MAIL ADICIONADO AQUI
+
     email: {
       type: DataTypes.STRING,
       unique: true,
@@ -27,7 +27,7 @@ const user = (sequelize, DataTypes) => {
         notEmpty: true,
       },
     },
-    role: { // Mantendo o campo 'role' da implementação anterior
+    role: { 
       type: DataTypes.STRING,
       defaultValue: 'user',
     }
@@ -44,7 +44,7 @@ const user = (sequelize, DataTypes) => {
     user.password = await bcrypt.hash(user.password, salt);
   });
 
-  // Método de instância para validar a senha (já estava correto)
+  // para validar a senha 
   User.prototype.isValidPassword = async function(password) {
     return await bcrypt.compare(password, this.password);
   };

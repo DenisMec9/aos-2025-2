@@ -1,8 +1,8 @@
 // ex01-express/api/routes/authRoutes.js
 
 import { Router } from 'express';
-// Importa as funções específicas do controller
-import { signup, login, logout } from '../../controllers/authController.js'; // Adicione a função logout
+
+import { signup, login, logout } from '../../controllers/authController.js'; 
 
 const router = Router();
 

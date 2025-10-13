@@ -24,23 +24,20 @@ const authMiddleware = (req, res, next) => {
   }
 
   // 3. Verifica a validade do token
-  // Lembre-se de usar a mesma chave secreta do seu controller
+
   jwt.verify(token, 'seuSegredoJWT', (err, decoded) => {
-    // Se houver erro na verificação (expirado, inválido), retorna 401
+  
     if (err) {
       return res.status(401).json({ error: 'Token inválido ou expirado.' });
     }
 
-    // 4. ATUALIZAÇÃO IMPORTANTE: Anexa os dados do usuário ao 'req'
-    // Em vez de apenas o ID, passamos o objeto com id, username e role.
-    // Isso permitirá que as próximas rotas verifiquem as permissões (role).
     req.user = {
       id: decoded.id,
       username: decoded.username,
       role: decoded.role
     };
     
-    return next(); // Libera o acesso para a próxima rota/middleware
+    return next(); 
   });
 };
 
