@@ -1,51 +1,38 @@
-import bcrypt from 'bcryptjs'; // <-- CORREÇÃO: Adicionar esta linha de importação
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-const user = (sequelize, DataTypes) => {
-  const User = sequelize.define('user', {
-    username: {
-      type: DataTypes.STRING,
-      unique: true,
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
-    },
-    password: { // Adicionado o campo de palavra-passe
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
-    }
-  });
+const UserSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  // NOVO CAMPO DE E-MAIL ADICIONADO AQUI
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [/.+\@.+\..+/, 'Por favor, insira um email válido'] // Validação simples de formato de e-mail
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
 
-  User.associate = (models) => {
-    User.hasMany(models.Message, { onDelete: 'CASCADE' });
-  };
+// Hook para criptografar a senha antes de salvar
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
-  // Esta função foi simplificada para corresponder aos campos do seu modelo
-  User.findByLogin = async (login) => {
-    const user = await User.findOne({
-      where: { username: login },
-    });
-
-    return user;
-  };
-
-  // Hook para encriptar a palavra-passe antes de criar o utilizador
-  User.beforeCreate(async (user) => {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
-  });
-
-  // Método de instância para validar a palavra-passe
-  User.prototype.isValidPassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
-  };
-
-
-  return User;
+// Método para comparar a senha enviada no login com a senha no banco
+UserSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-export default user;
-
+module.exports = mongoose.model('User', UserSchema);

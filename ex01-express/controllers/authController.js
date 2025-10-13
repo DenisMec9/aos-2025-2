@@ -1,45 +1,78 @@
-import jwt from 'jsonwebtoken';
-import { UniqueConstraintError } from 'sequelize';
+const User = require('../api/models/user');
+const jwt = require('jsonwebtoken');
 
-// Função de Registo (Signup)
-export const signup = async (req, res) => {
+/**
+ * Registra um novo usuário no sistema.
+ */
+exports.register = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    // Aceder ao modelo através do contexto, como no resto do seu projeto
-    const user = await req.context.models.User.create({ username, password });
-    res.status(201).json({ message: 'Utilizador criado com sucesso!', userId: user.id });
-  } catch (error) {
-    // Verifica se o erro é uma violação de restrição única
-    if (error instanceof UniqueConstraintError) {
-      return res.status(409).json({ error: 'Este nome de utilizador já está em uso.' });
+    const { username, email, password } = req.body;
+
+    // Validação para garantir que todos os campos foram enviados
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Por favor, forneça usuário, email e senha.' });
     }
-    
-    // Adiciona um log do erro para facilitar a depuração
-    console.error('Erro no signup:', error);
-    res.status(500).json({ error: 'Erro ao criar o utilizador.' });
+
+    const user = new User({ username, email, password });
+    await user.save();
+
+    res.status(201).json({ message: 'Usuário registrado com sucesso!' });
+  } catch (error) {
+    // Adiciona uma verificação para erro de duplicidade (e-mail ou usuário já existem)
+    if (error.code === 11000) {
+        return res.status(409).json({ message: 'Nome de usuário ou e-mail já existe.' });
+    }
+    res.status(500).json({ message: 'Erro ao registrar usuário.', error: error.message });
   }
 };
 
-// Função de Login
-export const login = async (req, res) => {
+/**
+ * Autentica um usuário e retorna um token JWT.
+ * Permite login com 'username' ou 'email'.
+ */
+exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    // Aceder ao modelo através do contexto
-    const user = await req.context.models.User.findOne({ where: { username } });
+    const { login, password } = req.body; // 'login' pode ser username ou email
 
-    if (!user || !(await user.isValidPassword(password))) {
-      return res.status(401).json({ error: 'Credenciais inválidas.' });
+    if (!login || !password) {
+      return res.status(400).json({ message: 'Por favor, forneça suas credenciais de login e senha.' });
     }
 
-    // Utilize uma variável de ambiente para o segredo do JWT em produção!
-    const token = jwt.sign({ id: user.id }, 'seuSegredoJWT', {
-      expiresIn: '1h',
+    // Procura o usuário tanto pelo username quanto pelo email.
+    // A query com '$or' do MongoDB permite essa flexibilidade.
+    const user = await User.findOne({
+      $or: [{ username: login }, { email: login }],
     });
 
-    res.json({ token });
+    if (!user) {
+      return res.status(401).json({ message: 'Autenticação falhou. Usuário não encontrado.' });
+    }
+
+    // Compara a senha enviada com a senha criptografada no banco
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Autenticação falhou. Senha incorreta.' });
+    }
+
+    // Se a autenticação for bem-sucedida, gera o token JWT
+    const payload = {
+      id: user._id,
+      username: user.username,
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET, // Chave secreta do arquivo .env
+      { expiresIn: '1h' }     // O token expira em 1 hora
+    );
+
+    res.status(200).json({
+      message: 'Login bem-sucedido!',
+      token: token,
+    });
+
   } catch (error) {
-     // Adiciona um log do erro para facilitar a depuração
-    console.error('Erro no login:', error);
-    res.status(500).json({ error: 'Erro ao fazer login.' });
+    res.status(500).json({ message: 'Erro no servidor.', error: error.message });
   }
 };
